@@ -4,14 +4,12 @@ import { wait } from "../../helpers.js";
 export class MergeSortGroupManager {
   constructor(array, targetElement, graphRatio = 7) {
     this.activeGroupIndex = 0;
-    this.groups = [];
+    this.groups = [{ startIndex: 0, endIndex: array.length - 1 }];
     this.groupGap = 20;
     this.graphRatio = graphRatio;
     this.array = array;
 
     this.targetElement = targetElement;
-
-    this.groups[0] = { startIndex: 0, endIndex: array.length - 1 };
 
     this.items = [];
 
@@ -95,16 +93,19 @@ export class MergeSortGroupManager {
     return wait();
   }
 
-  exchangeItemsIndex(targetIndex, newIndex) {
-    this.items[targetIndex].setIndex(newIndex);
-    this.items[newIndex].setIndex(targetIndex);
-    this.sortItems();
-    console.log(this.items);
-    this.replaceItems();
+  setArray(array) {
+    this.array = [...array];
+
+    for (let i = 0; i < this.array.length; i++) {
+      this.items[i] = new GraphItem(this.array[i], i, 0, this.graphRatio);
+      this.targetElement.appendChild(this.items[i].element);
+    }
+    this.groups = [{ startIndex: 0, endIndex: array.length - 1 }];
   }
 
   setItemValue(itemIndex, value) {
     this.items[itemIndex].setValue(value);
+    this.array[itemIndex] = value;
     return wait();
   }
 
@@ -120,7 +121,7 @@ export class MergeSortGroupManager {
 
   setRemainingItem(itemIndex) {
     this.items[itemIndex].setBg("skyblue");
-    return wait(500);
+    return wait();
   }
 
   setWinnerItem(itemIndex) {
@@ -135,13 +136,6 @@ export class MergeSortGroupManager {
 
   setInactiveItem(itemIndex) {
     this.items[itemIndex].setBg("lightGray");
-    return wait();
-  }
-
-  deleteAllChildFromDocument() {
-    while (this.targetElement.hasChildNodes()) {
-      this.targetElement.removeChild(this.targetElement.firstChild);
-    }
     return wait();
   }
 }

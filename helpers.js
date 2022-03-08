@@ -3,5 +3,5 @@ export const asyncSetTimeout = async (fn, ms = 500) => {
   fn();
 };
 
-export const wait = (ms = 300) =>
+export const wait = (ms = 50) =>
   new Promise((resolve) => setTimeout(resolve, ms));
