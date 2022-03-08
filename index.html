@@ -15,15 +15,26 @@
         border-radius: 3px;
       }
 
-      #mergeSort {
+      #mergeSort,
+      #mergeSort-tmpArray {
         position: relative;
+      }
+      body {
+        padding-left: 30px;
       }
     </style>
   </head>
   <body>
-    <div>
-      <h1>algorithm-visualization</h1>
-      <div id="mergeSort"></div>
+    <h1>Algorithm Visualization</h1>
+    <button id="mergeSort-button">Start</button>
+    <div style="display: flex">
+      <div>
+        <h2>Merge sort</h2>
+        <div id="mergeSort"></div>
+        <h3>temporary array</h3>
+        <div id="mergeSort-tmpArray"></div>
+      </div>
+      <div id="mergeSort-code"></div>
     </div>
     <script type="module">
       import "./divide_and_conquer/merge_sort/mergeSort.js";

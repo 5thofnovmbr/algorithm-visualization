@@ -1,96 +1,159 @@
-import { GraphItem } from "../graph/GraphItem.js";
+import { MergeSortGroupManager } from "./MergeSortGroupManager.js";
+import { asyncSetTimeout, wait } from "../../helpers.js";
 
-const list = [10, 34, 21, 12, 33, 11, 23, 9];
-const graphRatio = 7;
+const maxValue = 35;
+const arrayLength = 8;
+const graphRatio = 5;
 
+const sortStartButton = document.querySelector("#mergeSort-button");
 const targetElement = document.querySelector("#mergeSort");
-targetElement.style.height = `${Math.max(...list) * graphRatio + 20}px`;
+targetElement.style.height = `${maxValue * graphRatio + 20}px`;
+targetElement.style.width = `${arrayLength * 32 + 150}px`;
 
-class MergeSortWrapper {
-  constructor(array, targetElement, graphRatio = 7) {
-    this.activeGroupIndex = 0;
-    this.groups = [];
-    this.groupGap = 20;
-    this.graphRatio = graphRatio;
-    this.array = array;
+const tmpArrayElement = document.querySelector("#mergeSort-tmpArray");
+tmpArrayElement.style.height = `${maxValue * graphRatio + 20}px`;
 
-    this.targetElement = targetElement;
+const codeElement = document.querySelector("#mergeSort-code");
+codeElement.innerHTML = "";
 
-    this.groups[0] = { startIndex: 0, endIndex: array.length - 1 };
-
-    this.items = [];
-
-    for (let i = 0; i < this.array.length; i++) {
-      this.items[i] = new GraphItem(this.array[i], i, 0, this.graphRatio);
-      this.targetElement.appendChild(this.items[i].element);
-    }
+sortStartButton.addEventListener("click", async () => {
+  while (targetElement.hasChildNodes()) {
+    targetElement.removeChild(targetElement.firstChild);
+  }
+  while (tmpArrayElement.hasChildNodes()) {
+    tmpArrayElement.removeChild(tmpArrayElement.firstChild);
   }
 
-  onGroupChange() {
-    let currentGroupIndex = 0;
-    for (let i = 0; i < this.items.length; i++) {
-      if (!this.groups[currentGroupIndex]) {
-        if (i < this.items.length) {
-          for (let j = i; j < this.items.length; j++) {
-            this.items[j].setOffset(currentGroupIndex * this.groupGap);
-          }
-        }
-        break;
-      }
-
-      this.items[i].setOffset(currentGroupIndex * this.groupGap);
-
-      if (this.groups[currentGroupIndex]?.endIndex === i)
-        currentGroupIndex += 1;
-    }
-    console.log("current group list:", this.groups);
+  const array = [10, 34, 21, 12, 33, 11, 23, 9];
+  for (let i = 0; i < arrayLength; i++) {
+    array[i] = Math.ceil(Math.random() * maxValue);
   }
 
-  devideGroup(startIndex, endIndex) {
-    let midIndex = Math.floor((startIndex + endIndex) / 2);
-    let tmpGroups = [];
-    this.groups.map((group) => {
-      if (group.startIndex === startIndex && group.endIndex === endIndex) {
-        tmpGroups = tmpGroups.concat({ startIndex, endIndex: midIndex });
-        tmpGroups = tmpGroups.concat({ startIndex: midIndex + 1, endIndex });
+  const mergeSortGroupManager = new MergeSortGroupManager(
+    array,
+    targetElement,
+    graphRatio
+  );
+
+  const tmpArrayGroupManager = new MergeSortGroupManager(
+    [...array],
+    tmpArrayElement,
+    graphRatio
+  );
+  async function merge(array, startIndex, middleIndex, endIndex) {
+    const tmpArray = [...array]; //copy
+
+    // tmpArrayGroupManager.setGroups(mergeSortGroupManager.groups);
+
+    let firstArrayCounter = startIndex;
+    let secondArrayCounter = middleIndex + 1;
+    let resultArrayCounter = startIndex;
+    let remainingCounter = 0;
+
+    while (firstArrayCounter <= middleIndex && secondArrayCounter <= endIndex) {
+      mergeSortGroupManager.setActiveItem(firstArrayCounter);
+      await mergeSortGroupManager.setActiveItem(secondArrayCounter);
+
+      await wait(500);
+
+      if (array[firstArrayCounter] <= array[secondArrayCounter]) {
+        await mergeSortGroupManager.setWinnerItem(firstArrayCounter);
+
+        await tmpArrayGroupManager.setItemValue(
+          resultArrayCounter,
+          array[firstArrayCounter]
+        );
+
+        await mergeSortGroupManager.setInactiveItem(firstArrayCounter);
+
+        tmpArray[resultArrayCounter++] = array[firstArrayCounter++];
       } else {
-        tmpGroups = tmpGroups.concat(group);
+        await mergeSortGroupManager.setWinnerItem(secondArrayCounter);
+
+        await tmpArrayGroupManager.setItemValue(
+          resultArrayCounter,
+          array[secondArrayCounter]
+        );
+
+        await mergeSortGroupManager.setInactiveItem(secondArrayCounter);
+
+        tmpArray[resultArrayCounter++] = array[secondArrayCounter++];
       }
-    });
-    console.log(tmpGroups);
-    this.groups = [...tmpGroups];
+    }
 
-    this.onGroupChange();
-    return midIndex;
+    await wait(500);
+
+    if (firstArrayCounter <= middleIndex) {
+      for (
+        remainingCounter = firstArrayCounter;
+        remainingCounter <= middleIndex;
+        remainingCounter++
+      ) {
+        await mergeSortGroupManager.setRemainingItem(remainingCounter);
+
+        await tmpArrayGroupManager.setItemValue(
+          resultArrayCounter,
+          array[remainingCounter]
+        );
+
+        await mergeSortGroupManager.setInactiveItem(remainingCounter);
+        tmpArray[resultArrayCounter++] = array[remainingCounter];
+      }
+    }
+    if (secondArrayCounter <= endIndex) {
+      for (
+        remainingCounter = secondArrayCounter;
+        remainingCounter <= endIndex;
+        remainingCounter++
+      ) {
+        await mergeSortGroupManager.setRemainingItem(remainingCounter);
+
+        await tmpArrayGroupManager.setItemValue(
+          resultArrayCounter,
+          array[remainingCounter]
+        );
+
+        await mergeSortGroupManager.setInactiveItem(remainingCounter);
+        tmpArray[resultArrayCounter] = array[remainingCounter];
+      }
+    }
+
+    await wait(500);
+
+    for (let i = startIndex; i <= endIndex; i++) {
+      array[i] = tmpArray[i];
+      tmpArrayGroupManager.setCopyItem(i, tmpArray[i]);
+      await mergeSortGroupManager.setCopyItem(i, tmpArray[i]);
+      await wait(500);
+
+      await mergeSortGroupManager.setItemValue(i, tmpArray[i]);
+
+      mergeSortGroupManager.setInactiveItem(i, tmpArray[i]);
+      await tmpArrayGroupManager.setInactiveItem(i, tmpArray[i]);
+      await wait(500);
+    }
   }
-}
-const mergeSortWrapper = new MergeSortWrapper(list, targetElement, graphRatio);
 
-async function devide() {
-  let mid = 7;
-  await setTimeout(() => {
-    mid = mergeSortWrapper.devideGroup(0, mid);
-  }, 500);
+  async function mergeSort(array, startIndex, endIndex) {
+    if (startIndex !== endIndex) {
+      await mergeSortGroupManager.devideGroup(startIndex, endIndex);
 
-  await setTimeout(() => {
-    mid = mergeSortWrapper.devideGroup(0, mid);
-  }, 1000);
-  await setTimeout(() => {
-    mid = mergeSortWrapper.devideGroup(4, 7);
-  }, 1000);
-}
+      const middleIndex = Math.floor((startIndex + endIndex) / 2);
 
-devide();
+      await mergeSort(array, startIndex, middleIndex);
 
-// const divs = [];
+      await mergeSort(array, middleIndex + 1, endIndex);
+      await merge(array, startIndex, middleIndex, endIndex);
 
-// for (let i = 0; i < list.length; i++) {
-//   divs[i] = new GraphItem(list[i], i, 0, graphRatio);
+      await mergeSortGroupManager.combineGroup(
+        startIndex,
+        middleIndex,
+        middleIndex + 1,
+        endIndex
+      );
+    }
+    await tmpArrayGroupManager.setGroups(mergeSortGroupManager.groups);
+  }
 
-//   targetElement.appendChild(divs[i].element);
-// }
-
-// setTimeout(() => {
-//   divs[2].setIndex(1);
-//   divs[1].setIndex(2);
-// }, 1000);
+  await mergeSort(array, 0, array.length - 1);
+});
