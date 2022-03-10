@@ -5,39 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>algorithm-visualizetion</title>
-    <style>
-      .transition {
-        transition-property: all;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 100ms;
-      }
-      .rounded {
-        border-radius: 3px;
-      }
-
-      #mergeSort,
-      #mergeSort-tmpArray {
-        position: relative;
-      }
-      body {
-        padding-left: 30px;
-      }
-    </style>
+    <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <h1>Algorithm Visualization</h1>
-    <button id="mergeSort-button">Start</button>
-    <div style="display: flex">
-      <div>
-        <h2>Merge sort</h2>
-        <div id="mergeSort"></div>
-        <h3>temporary array</h3>
-        <div id="mergeSort-tmpArray"></div>
-      </div>
-      <div id="mergeSort-code"></div>
-    </div>
-    <script type="module">
-      import "./divide_and_conquer/merge_sort/index.js";
-    </script>
+    <h1>Algorithms</h1>
+    <h2>Divide and Conquer</h2>
+    <ul>
+      <li><a href="./divide_and_conquer/merge_sort/">Merge sort</a></li>
+      <li><a href="./divide_and_conquer/quick_sort/">quick sort</a></li>
+    </ul>
   </body>
 </html>

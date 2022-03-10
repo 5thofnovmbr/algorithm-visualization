@@ -1,7 +1,7 @@
-import { GraphItem } from "../../graph/GraphItem.js";
-import { wait } from "../../helpers.js";
+import { GraphItem } from "./GraphItem.js";
+import { asyncSetTimeout, wait } from "../helpers.js";
 
-export class MergeSortGroupManager {
+export class ArrayVisualController {
   constructor(array, targetElement, graphRatio = 7) {
     this.activeGroupIndex = 0;
     this.groups = [{ startIndex: 0, endIndex: array.length - 1 }];
@@ -19,23 +19,18 @@ export class MergeSortGroupManager {
     }
   }
 
-  replaceItems() {
-    let currentGroupIndex = 0;
-    for (let i = 0; i < this.items.length; i++) {
-      if (!this.groups[currentGroupIndex]) {
-        if (i < this.items.length) {
-          for (let j = i; j < this.items.length; j++) {
-            this.items[j].setOffset(currentGroupIndex * this.groupGap);
-          }
-        }
-        break;
+  async replaceItems() {
+    for (let i = 0; i < this.groups.length; i++) {
+      const currentGroup = this.groups[i];
+
+      for (let j = currentGroup.startIndex; j <= currentGroup.endIndex; j++) {
+        this.items
+          .find((item) => item.index === j)
+          .setOffset(i * this.groupGap);
       }
-
-      this.items[i].setOffset(currentGroupIndex * this.groupGap);
-
-      if (this.groups[currentGroupIndex]?.endIndex === i)
-        currentGroupIndex += 1;
     }
+
+    await wait();
   }
 
   sortItems() {
@@ -48,23 +43,37 @@ export class MergeSortGroupManager {
     });
   }
 
-  devideGroup(startIndex, endIndex) {
-    if (startIndex === endIndex) return;
-
-    let midIndex = Math.floor((startIndex + endIndex) / 2);
+  devideGroup(startIndex, point, endIndex) {
     let tmpGroups = [];
     this.groups.map((group) => {
       if (group.startIndex === startIndex && group.endIndex === endIndex) {
-        tmpGroups = tmpGroups.concat({ startIndex, endIndex: midIndex });
-        tmpGroups = tmpGroups.concat({ startIndex: midIndex + 1, endIndex });
+        tmpGroups = tmpGroups.concat({ startIndex, endIndex: point });
+        tmpGroups = tmpGroups.concat({ startIndex: point + 1, endIndex });
       } else {
         tmpGroups = tmpGroups.concat(group);
       }
     });
+
+    console.log(tmpGroups);
+    if (tmpGroups[tmpGroups.length - 1].endPoint < this.array.length - 1) {
+      tmpGroups = tmpGroups.concat({
+        startIndex: tmpGroups[tmpGroups.length - 1].endPoint + 1,
+        endIndex: this.array.length - 1,
+      });
+    }
+    console.log(tmpGroups);
+
     this.groups = [...tmpGroups];
 
     this.replaceItems();
     return wait();
+  }
+
+  devideGroupToHalf(startIndex, endIndex) {
+    if (startIndex === endIndex) return;
+
+    let midIndex = Math.floor((startIndex + endIndex) / 2);
+    this.devideGroup(startIndex, midIndex, endIndex);
   }
 
   setGroups(groups) {
@@ -109,33 +118,47 @@ export class MergeSortGroupManager {
     return wait();
   }
 
-  setActiveItem(itemIndex) {
-    this.items[itemIndex].setBg("blue");
-    return wait();
+  async swapItems(i, j) {
+    if (i === j) return;
+    const itemI = this.items.find((item) => item.index === i);
+    const itemJ = this.items.find((item) => item.index === j);
+    const tmp = itemI.index;
+
+    itemI.index = itemJ.index;
+    itemJ.index = tmp;
+
+    await this.replaceItems();
+  }
+
+  async setItemColor(itemIndex, color) {
+    const target = this.items.find((item) => item.index === itemIndex);
+    if (target) {
+      target.setBg(color);
+      await wait();
+    }
+  }
+
+  setCompareItem(itemIndex) {
+    this.setItemColor(itemIndex, "blue");
   }
 
   setFocusedItem(itemIndex) {
-    this.items[itemIndex].setBg("red");
-    return wait();
-  }
-
-  setRemainingItem(itemIndex) {
-    this.items[itemIndex].setBg("skyblue");
-    return wait();
+    this.setItemColor(itemIndex, "red");
   }
 
   setWinnerItem(itemIndex) {
-    this.items[itemIndex].setBg("green");
-    return wait();
+    this.setItemColor(itemIndex, "green");
   }
 
   setCopyItem(itemIndex) {
-    this.items[itemIndex].setBg("orange");
-    return wait();
+    this.setItemColor(itemIndex, "orange");
+  }
+
+  setRemainingItem(itemIndex) {
+    this.setItemColor(itemIndex, "skyblue");
   }
 
   setInactiveItem(itemIndex) {
-    this.items[itemIndex].setBg("lightGray");
-    return wait();
+    this.setItemColor(itemIndex, "lightGray");
   }
 }

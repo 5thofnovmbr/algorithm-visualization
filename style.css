@@ -1,0 +1,16 @@
+.transition {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 100ms;
+}
+.rounded {
+  border-radius: 3px;
+}
+
+#sort-target,
+#sort-tmpArray {
+  position: relative;
+}
+body {
+  padding-left: 30px;
+}
